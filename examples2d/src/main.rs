@@ -1,5 +1,8 @@
 use bevy::prelude::*;
-use wgsparkl_testbed2d::{init_testbed, SceneInitFn, SceneInits};
+use wgsparkl_testbed2d::{
+    init_testbed,
+    load_scene::{SceneInitFn, SceneInits, SceneLoadFn},
+};
 
 mod elastic_cut2;
 mod elasticity2;
@@ -18,12 +21,17 @@ pub fn main() {
 }
 
 fn register_scenes(world: &mut World) {
-    let scenes: Vec<(String, SceneInitFn)> = vec![
-        ("sand".to_string(), Box::new(sand2::sand_demo)),
-        ("elastic".to_string(), Box::new(elasticity2::elastic_demo)),
+    let scenes: Vec<(String, SceneInitFn, Option<SceneLoadFn>)> = vec![
+        ("sand".to_string(), Box::new(sand2::sand_demo), None),
+        (
+            "elastic".to_string(),
+            Box::new(elasticity2::elastic_demo),
+            None,
+        ),
         (
             "elastic cut".to_string(),
             Box::new(elastic_cut2::elastic_cut_demo),
+            None,
         ),
     ];
     let mut inits = world.resource_mut::<SceneInits>();
