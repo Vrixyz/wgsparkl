@@ -1,31 +1,36 @@
-use std::fs::File;
-use std::io::Read;
-
 use crate::utils::default_scene::{self, SAMPLE_PER_UNIT};
 
 use bevy::color::palettes::css;
 use bevy::{prelude::*, render::renderer::RenderDevice};
-use nalgebra::{vector, Isometry3, Transform3, UnitQuaternion, Vector3};
+use nalgebra::{vector, Isometry3, Point3, Transform3, UnitQuaternion, Vector3};
 use rapier3d::prelude::RigidBodyHandle;
 use rapier3d::prelude::{ColliderBuilder, RigidBodyBuilder, SharedShape, TriMeshFlags};
 use wgsparkl3d::load_mesh3d::load_gltf::{load_model_trimeshes, load_model_with_colors};
 use wgsparkl3d::pipeline::MpmData;
 use wgsparkl3d::solver::SimulationParams;
+use wgsparkl_testbed3d::load_scene::{Dependencies, Loader};
 use wgsparkl_testbed3d::Callbacks;
 use wgsparkl_testbed3d::{AppState, PhysicsContext};
 use wgsparkl_testbed3d::{Callback, RapierData};
+
+pub fn load(loader: &mut Loader) {
+    // banana
+    loader.load_raw_file("banana.glb");
+
+    // slicer
+    loader.load_raw_file("chefs_knife_open_blade.glb");
+}
 
 pub fn demo(
     device: RenderDevice,
     app_state: &mut AppState,
     callbacks: &mut Callbacks,
+    assets: &Dependencies,
 ) -> PhysicsContext {
-    let mut file = File::open("assets/banana.glb").expect("Failed to open GLB file");
-    let mut buffer = Vec::new();
-    file.read_to_end(&mut buffer).expect("Failed to read file");
-
+    // banana
+    let buffer = &assets.get_data("banana.glb").unwrap().data;
     let pc_grid = load_model_with_colors(
-        &buffer,
+        buffer,
         Transform3::from_matrix_unchecked(
             Isometry3::from_parts(
                 Vector3::new(0.0, 2.4, 0.0).into(),
@@ -64,11 +69,8 @@ pub fn demo(
         particles.push(particle);
     }
     // Slicer
-    let mut file =
-        File::open("assets/chefs_knife_open_blade.glb").expect("Failed to open GLB file");
-    let mut buffer = Vec::new();
-    file.read_to_end(&mut buffer).expect("Failed to read file");
-    let mut slicer_trimeshes = load_model_trimeshes(&buffer);
+    let buffer = &assets.get_data("chefs_knife_open_blade.glb").unwrap().data;
+    let mut slicer_trimeshes: Vec<(Vec<Point3<f32>>, Vec<usize>)> = load_model_trimeshes(&buffer);
     slicer_trimeshes.iter_mut().for_each(|trimesh| {
         trimesh.0.iter_mut().for_each(|v| {
             *v *= 10f32;

@@ -6,11 +6,11 @@ pub extern crate wgsparkl2d as wgsparkl;
 #[cfg(feature = "dim3")]
 pub extern crate wgsparkl3d as wgsparkl;
 
-use bevy::render::renderer::RenderDevice;
 #[cfg(feature = "dim2")]
 pub use instancing2d as instancing;
 #[cfg(feature = "dim3")]
 pub use instancing3d as instancing;
+use load_scene::{load_scene_plugin, SceneState};
 use std::collections::HashMap;
 
 #[cfg(feature = "dim2")]
@@ -18,7 +18,9 @@ pub mod instancing2d;
 #[cfg(feature = "dim3")]
 pub mod instancing3d;
 
+pub mod file_loader;
 mod hot_reload;
+pub mod load_scene;
 pub mod prep_vertex_buffer;
 mod rigid_graphics;
 pub mod startup;
@@ -26,7 +28,6 @@ pub mod step;
 pub mod ui;
 
 use bevy::asset::load_internal_asset;
-use bevy::ecs::system::SystemId;
 use bevy::pbr::wireframe::WireframePlugin;
 use bevy::prelude::*;
 use bevy_editor_cam::prelude::DefaultEditorCamPlugins;
@@ -49,11 +50,15 @@ pub fn init_testbed(app: &mut App) {
             // bevy_mod_picking::DefaultPickingPlugins,
             DefaultEditorCamPlugins,
         ))
+        .add_plugins(load_scene_plugin)
         .add_plugins(instancing::ParticlesMaterialPlugin)
         .add_plugins(bevy_egui::EguiPlugin)
-        .init_resource::<SceneInits>()
         .init_resource::<Callbacks>()
         .add_systems(Startup, startup::setup_app)
+        .add_systems(
+            Update,
+            ui::update_ui_loading.run_if(not(in_state(SceneState::Loaded))),
+        )
         .add_systems(
             Update,
             (
@@ -64,7 +69,8 @@ pub fn init_testbed(app: &mut App) {
                 rigid_graphics::update_rigid_graphics,
                 hot_reload::handle_hot_reloading,
             )
-                .chain(),
+                .chain()
+                .run_if(in_state(SceneState::Loaded)),
         );
 
     #[cfg(not(target_arch = "wasm32"))]
@@ -161,46 +167,4 @@ pub enum RunState {
     Running,
     Paused,
     Step,
-}
-
-#[derive(Resource)]
-pub struct SceneInits {
-    pub scenes: Vec<(String, SceneInitFn)>,
-    reset_graphics: SystemId,
-    reset_app_state: SystemId,
-}
-pub type SceneInitFn =
-    Box<dyn FnMut(RenderDevice, &mut AppState, &mut Callbacks) -> PhysicsContext + Send + Sync>;
-
-impl SceneInits {
-    pub fn init_scene(&self, commands: &mut Commands, scene_id: usize) {
-        commands.run_system(self.reset_app_state);
-        commands.run_system_cached_with(run_scene_init, scene_id);
-        commands.run_system(self.reset_graphics);
-    }
-}
-
-pub fn run_scene_init(
-    scene_id: In<usize>,
-    mut commands: Commands,
-    mut scenes: ResMut<SceneInits>,
-    device: Res<RenderDevice>,
-    mut app_state: ResMut<AppState>,
-    mut callbacks: ResMut<Callbacks>,
-) {
-    commands.insert_resource(scenes.scenes[scene_id.0].1(
-        device.clone(),
-        &mut app_state,
-        &mut callbacks,
-    ));
-}
-
-impl FromWorld for SceneInits {
-    fn from_world(world: &mut World) -> Self {
-        Self {
-            scenes: vec![],
-            reset_graphics: world.register_system(startup::setup_graphics),
-            reset_app_state: world.register_system(startup::setup_app_state),
-        }
-    }
 }
