@@ -1,5 +1,8 @@
 use bevy::prelude::*;
-use wgsparkl_testbed3d::{init_testbed, SceneInitFn, SceneInits};
+use wgsparkl_testbed3d::{
+    init_testbed,
+    load_scene::{SceneInitFn, SceneInits, SceneLoadFn},
+};
 
 pub mod utils;
 
@@ -22,21 +25,28 @@ pub fn main() {
 }
 
 fn register_scenes(world: &mut World) {
-    let scenes: Vec<(String, SceneInitFn)> = vec![
-        ("sand".to_string(), Box::new(sand3::sand_demo)),
+    let scenes: Vec<(String, SceneInitFn, Option<SceneLoadFn>)> = vec![
+        ("sand".to_string(), Box::new(sand3::sand_demo), None),
         (
             "heightfield".to_string(),
             Box::new(heightfield3::heightfield_demo),
+            None,
         ),
         (
             "elastic_cut".to_string(),
             Box::new(elastic_cut3::elastic_cut_demo),
+            None,
         ),
         (
             "elastic_model_colors".to_string(),
             Box::new(glb_to_point_cloud_color::elastic_color_model_demo),
+            None,
         ),
-        ("taichi_banana".to_string(), Box::new(banana3::demo)),
+        (
+            "taichi_banana".to_string(),
+            Box::new(banana3::demo),
+            Some(Box::new(banana3::load)),
+        ),
     ];
     let mut inits = world.resource_mut::<SceneInits>();
     inits.scenes = scenes;

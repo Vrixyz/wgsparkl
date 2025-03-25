@@ -1,6 +1,7 @@
+use crate::load_scene::SceneInits;
 use crate::prep_vertex_buffer::RenderMode;
 use crate::startup::RigidParticlesTag;
-use crate::{AppState, PhysicsContext, RunState, SceneInits, Timestamps};
+use crate::{AppState, PhysicsContext, RunState, Timestamps};
 use bevy::prelude::*;
 use bevy::render::renderer::RenderQueue;
 use bevy_egui::egui::{CollapsingHeader, Slider};
@@ -8,6 +9,11 @@ use bevy_egui::{egui, EguiContexts};
 use nalgebra::vector;
 use wgsparkl::solver::SimulationParams;
 
+pub fn update_ui_loading(mut ui_context: EguiContexts) {
+    egui::Window::new("Loading").show(ui_context.ctx_mut(), |ui| {
+        ui.label("Loading...");
+    });
+}
 #[allow(clippy::too_many_arguments)]
 pub fn update_ui(
     mut commands: Commands,
@@ -24,7 +30,7 @@ pub fn update_ui(
         egui::ComboBox::from_label("selected sample")
             .selected_text(&scenes.scenes[app_state.selected_scene].0)
             .show_ui(ui, |ui| {
-                for (i, (name, _)) in scenes.scenes.iter().enumerate() {
+                for (i, (name, _, _)) in scenes.scenes.iter().enumerate() {
                     changed = ui
                         .selectable_value(&mut app_state.selected_scene, i, name)
                         .changed()
