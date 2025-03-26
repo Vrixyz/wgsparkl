@@ -55,7 +55,7 @@ pub fn demo(
         app_state.num_substeps = 30;
         app_state.gravity_factor = 1.0;
     };
-    default_scene::spawn_ground_and_walls(&mut rapier_data);
+    default_scene::spawn_ground_and_walls(&mut rapier_data, 1f32);
 
     let mut particles = vec![];
     for (pos, color) in pc_grid {

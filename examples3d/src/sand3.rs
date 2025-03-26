@@ -35,7 +35,7 @@ pub fn sand_demo(
                 let radius = cell_width / 4.0;
                 particles.push(Particle {
                     position,
-                    dynamics: ParticleDynamics::with_density(radius, density),
+                    dynamics: ParticleDynamics::with_density(radius * 4f32, density),
                     model: ElasticCoefficients::from_young_modulus(2_000_000_000.0, 0.2),
                     plasticity: Some(DruckerPrager::new(2_000_000_000.0, 0.2)),
                     phase: None,

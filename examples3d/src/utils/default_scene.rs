@@ -1,7 +1,7 @@
 #![allow(unused)]
 
 use bevy::prelude::*;
-use nalgebra::vector;
+use nalgebra::{vector, Vector3};
 use rapier3d::prelude::{ColliderBuilder, RigidBodyBuilder};
 use wgsparkl3d::{
     models::ElasticCoefficients,
@@ -12,27 +12,27 @@ use wgsparkl_testbed3d::{AppState, RapierData};
 pub const SAMPLE_PER_UNIT: f32 = 10.0;
 
 /// Spawns a ground and 4 walls.
-pub fn spawn_ground_and_walls(rapier_data: &mut RapierData) {
+pub fn spawn_ground_and_walls(rapier_data: &mut RapierData, scale: f32) {
     rapier_data.insert_body_and_collider(
-        RigidBodyBuilder::fixed().translation(vector![0.0, -4.0, 0.0]),
-        ColliderBuilder::cuboid(100.0, 4.0, 100.0),
+        RigidBodyBuilder::fixed().translation(vector![0.0, -4.0, 0.0] * scale),
+        ColliderBuilder::cuboid(100.0 * scale, 4.0 * scale, 100.0 * scale),
     );
 
     rapier_data.insert_body_and_collider(
-        RigidBodyBuilder::fixed().translation(vector![0.0, 5.0, -35.0]),
-        ColliderBuilder::cuboid(35.0, 5.0, 0.5),
+        RigidBodyBuilder::fixed().translation(vector![0.0, 5.0, -35.0] * scale),
+        ColliderBuilder::cuboid(35.0 * scale, 5.0 * scale, 0.5 * scale),
     );
     rapier_data.insert_body_and_collider(
-        RigidBodyBuilder::fixed().translation(vector![0.0, 5.0, 35.0]),
-        ColliderBuilder::cuboid(35.0, 5.0, 0.5),
+        RigidBodyBuilder::fixed().translation(vector![0.0, 5.0, 35.0] * scale),
+        ColliderBuilder::cuboid(35.0 * scale, 5.0 * scale, 0.5 * scale),
     );
     rapier_data.insert_body_and_collider(
-        RigidBodyBuilder::fixed().translation(vector![-35.0, 5.0, 0.0]),
-        ColliderBuilder::cuboid(0.5, 5.0, 35.0),
+        RigidBodyBuilder::fixed().translation(vector![-35.0, 5.0, 0.0] * scale),
+        ColliderBuilder::cuboid(0.5 * scale, 5.0 * scale, 35.0 * scale),
     );
     rapier_data.insert_body_and_collider(
-        RigidBodyBuilder::fixed().translation(vector![35.0, 5.0, 0.0]),
-        ColliderBuilder::cuboid(0.5, 5.0, 35.0),
+        RigidBodyBuilder::fixed().translation(vector![35.0, 5.0, 0.0] * scale),
+        ColliderBuilder::cuboid(0.5 * scale, 5.0 * scale, 35.0 * scale),
     );
 }
 

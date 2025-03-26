@@ -37,7 +37,7 @@ pub fn elastic_color_model_demo(
         app_state.num_substeps = 20;
         app_state.gravity_factor = 1.0;
     };
-    default_scene::spawn_ground_and_walls(&mut rapier_data);
+    default_scene::spawn_ground_and_walls(&mut rapier_data, 1f32);
 
     let mut particles = vec![];
     for (pos, color) in pc_grid {
@@ -48,7 +48,7 @@ pub fn elastic_color_model_demo(
         );
         particles.push(particle);
     }
-    default_scene::spawn_ground_and_walls(&mut rapier_data);
+    default_scene::spawn_ground_and_walls(&mut rapier_data, 1f32);
     let data = MpmData::new(
         device.wgpu_device(),
         params,
