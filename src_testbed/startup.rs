@@ -1,3 +1,4 @@
+use crate::egui_text_gizmo::TextGizmoCam;
 use crate::instancing::{InstanceBuffer, InstanceData, InstanceMaterialData};
 use crate::prep_vertex_buffer::{GpuRenderConfig, RenderConfig, RenderMode, WgPrepVertexBuffer};
 use crate::rigid_graphics::{BevyMaterial, EntityWithGraphics};
@@ -82,6 +83,7 @@ pub fn setup_app(mut commands: Commands, device: Res<RenderDevice>) {
                 last_anchor_depth: -99.0,
                 ..Default::default()
             },
+            TextGizmoCam,
         ));
     }
 
@@ -91,6 +93,7 @@ pub fn setup_app(mut commands: Commands, device: Res<RenderDevice>) {
             Camera3d::default(),
             Transform::from_translation(Vec3::new(0.0, 1.5, 5.0)),
             EditorCam::default(),
+            TextGizmoCam,
         ));
     }
 }

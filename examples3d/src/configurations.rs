@@ -1,6 +1,8 @@
+use bevy::color::palettes;
 use wgsparkl3d::solver::ParticlePhase;
 use wgsparkl3d::wgrapier::dynamics::body::{BodyCoupling, BodyCouplingEntry};
-use wgsparkl_testbed3d::{wgsparkl, Callbacks, RapierData};
+use wgsparkl_testbed3d::gizmos::TestbedGizmos;
+use wgsparkl_testbed3d::{wgsparkl, Callback, Callbacks, RapierData};
 
 use bevy::render::renderer::RenderDevice;
 use nalgebra::{vector, Vector2, Vector3};
@@ -28,7 +30,7 @@ pub struct ParticlesConfiguration {
 pub fn configurations_demo(
     device: RenderDevice,
     app_state: &mut AppState,
-    _callbacks: &mut Callbacks,
+    callbacks: &mut Callbacks,
 ) -> PhysicsContext {
     let mut rapier_data = RapierData::default();
     let device = device.wgpu_device();
@@ -55,9 +57,37 @@ pub fn configurations_demo(
     let cell_width = 0.5f32;
     let mut particles = vec![];
     let mut configurations = vec![];
-
+    let get_position_for_line = |z: f32| -> bevy::math::Vec3 {
+        bevy::math::Vec3::new(
+            -2f32 * grid_size_x as f32 * 3f32 * 2f32,
+            5f32,
+            z * grid_size_z as f32 * 0.7f32 * 3f32 * 2f32 + grid_size_z as f32 / 2f32,
+        )
+    };
+    let mut display_text_at_world_pos = |world_pos: bevy::math::Vec3, text: String| {
+        callbacks.0.push(Callback {
+            callback: Box::new(
+                move |_render,
+                      _physics,
+                      _timestamps,
+                      _app_state,
+                      text_gizmos: &mut TestbedGizmos| {
+                    text_gizmos.add_text(&text, world_pos, 42f32, palettes::css::CORAL);
+                },
+            ),
+            run_when_paused: true,
+        });
+    };
     {
         let young_modulus = 1_000_000_000.0;
+        let z = -1f32;
+        display_text_at_world_pos(
+            get_position_for_line(z),
+            format!(
+                "With plasticity\nmodulus = {}M",
+                young_modulus / 1_000_000.0
+            ),
+        );
         // line with plasticity, varying poisson
         for x in -1..2 {
             let poisson_ratio = match x {
@@ -75,18 +105,23 @@ pub fn configurations_demo(
                 ..DruckerPrager::new(model.lambda, model.mu)
             });
             configurations.push(ParticlesConfiguration {
-                coords: Vector2::<i32>::new(x, -1),
+                coords: Vector2::<i32>::new(x, z as i32),
                 density: 3700f32,
                 model,
                 plasticity,
                 phase: None,
-                description: format!("With plasticity.\n poisson: {}", poisson_ratio),
+                description: format!("poisson: {}", poisson_ratio),
             });
         }
     }
 
     {
         let poisson_ratio = 0f32;
+        let z = 0f32;
+        display_text_at_world_pos(
+            get_position_for_line(z),
+            format!("With plasticity\npoisson = {}", poisson_ratio),
+        );
         // line with plasticity, varying young modulus
         for x in -1..2 {
             let young_modulus = match x {
@@ -104,21 +139,24 @@ pub fn configurations_demo(
                 ..DruckerPrager::new(model.lambda, model.mu)
             });
             configurations.push(ParticlesConfiguration {
-                coords: Vector2::<i32>::new(x, 0),
+                coords: Vector2::<i32>::new(x, z as i32),
                 density: 3700f32,
                 model,
                 plasticity,
                 phase: None,
-                description: format!(
-                    "With plasticity.\nmodulus: {}M",
-                    young_modulus / 1_000_000f32
-                ),
+                description: format!("modulus: {}M", young_modulus / 1_000_000f32),
             });
         }
     }
 
     {
         let poisson_ratio = 0f32;
+        let z = 1f32;
+        display_text_at_world_pos(
+            get_position_for_line(z),
+            format!("Without plasticity.\npoisson = {}", poisson_ratio),
+        );
+
         // line without plasticity, varying young modulus
         for x in -1..2 {
             let young_modulus = match x {
@@ -129,7 +167,7 @@ pub fn configurations_demo(
             };
             let model = ElasticCoefficients::from_young_modulus(young_modulus, poisson_ratio);
             configurations.push(ParticlesConfiguration {
-                coords: Vector2::<i32>::new(x, 1),
+                coords: Vector2::<i32>::new(x, z as i32),
                 density: 3700f32,
                 model,
                 plasticity: None,
@@ -137,15 +175,20 @@ pub fn configurations_demo(
                     phase: 1.0,
                     max_stretch: f32::MAX,
                 }),
-                description: format!(
-                    "Without plasticity.\nmodulus: {}M",
-                    young_modulus / 1_000_000.0
-                ),
+                description: format!("modulus: {}M", young_modulus / 1_000_000.0),
             });
         }
     }
     {
         let young_modulus = 1_000_000.0;
+        let z = 2f32;
+        display_text_at_world_pos(
+            get_position_for_line(z),
+            format!(
+                "Without plasticity.\nmodulus = {}M",
+                young_modulus / 1_000_000.0
+            ),
+        );
         // line without plasticity, varying poisson_ratio
         for x in -1..2 {
             let poisson_ratio = match x {
@@ -156,7 +199,7 @@ pub fn configurations_demo(
             };
             let model = ElasticCoefficients::from_young_modulus(young_modulus, poisson_ratio);
             configurations.push(ParticlesConfiguration {
-                coords: Vector2::<i32>::new(x, 2),
+                coords: Vector2::<i32>::new(x, z as i32),
                 density: 3700f32,
                 model,
                 plasticity: None,
@@ -164,7 +207,7 @@ pub fn configurations_demo(
                     phase: 1.0,
                     max_stretch: f32::MAX,
                 }),
-                description: format!("Without plasticity.\npoisson: {}", poisson_ratio),
+                description: format!("poisson: {}", poisson_ratio),
             });
         }
     }
@@ -192,6 +235,10 @@ pub fn configurations_demo(
                 phase: c.phase,
                 color: None,
             });
+            display_text_at_world_pos(
+                bevy::math::Vec3::new(offset.x, 5f32, offset.z + 10f32 + grid_size_z as f32),
+                c.description.clone(),
+            );
         }
     }
 
@@ -205,7 +252,11 @@ pub fn configurations_demo(
         dt: (1.0 / 60.0) / (app_state.num_substeps as f32),
     };
 
-    default_scene::spawn_ground_and_walls(&mut rapier_data, 3f32);
+    let scale = 3f32;
+    rapier_data.insert_body_and_collider(
+        RigidBodyBuilder::fixed().translation(vector![0.0, -4.0, 0.0] * scale),
+        ColliderBuilder::cuboid(100.0 * scale, 4.0 * scale, 100.0 * scale),
+    );
 
     let data = MpmData::new(
         device,
