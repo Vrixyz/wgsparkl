@@ -40,7 +40,7 @@ fn register_scenes(world: &mut World) {
         (
             "elastic_model_colors".to_string(),
             Box::new(glb_to_point_cloud_color::elastic_color_model_demo),
-            None,
+            Some(Box::new(glb_to_point_cloud_color::load)),
         ),
         (
             "taichi_banana".to_string(),
