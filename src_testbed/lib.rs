@@ -57,20 +57,19 @@ pub fn init_testbed(app: &mut App) {
         .add_systems(Startup, startup::setup_app)
         .add_systems(
             Update,
-            ui::update_ui_loading.run_if(not(in_state(SceneState::Loaded))),
-        )
-        .add_systems(
-            Update,
             (
                 ui::update_ui,
-                (step::step_simulation, step::callbacks)
+                (
+                    (step::step_simulation, step::callbacks)
+                        .chain()
+                        .run_if(|state: Res<AppState>| state.run_state != RunState::Paused),
+                    rigid_graphics::update_rigid_graphics,
+                    hot_reload::handle_hot_reloading,
+                )
                     .chain()
-                    .run_if(|state: Res<AppState>| state.run_state != RunState::Paused),
-                rigid_graphics::update_rigid_graphics,
-                hot_reload::handle_hot_reloading,
+                    .run_if(in_state(SceneState::Loaded)),
             )
-                .chain()
-                .run_if(in_state(SceneState::Loaded)),
+                .chain(),
         );
 
     #[cfg(not(target_arch = "wasm32"))]

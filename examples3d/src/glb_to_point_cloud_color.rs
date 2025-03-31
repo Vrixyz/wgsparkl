@@ -5,8 +5,12 @@ use nalgebra::{vector, Isometry3, Transform3, UnitQuaternion, Vector3};
 use std::{fs::File, io::Read};
 use wgsparkl3d::load_mesh3d::load_gltf::load_model_with_colors;
 use wgsparkl3d::{pipeline::MpmData, solver::SimulationParams};
-use wgsparkl_testbed3d::load_scene::Dependencies;
+use wgsparkl_testbed3d::load_scene::{Dependencies, Loader};
 use wgsparkl_testbed3d::{AppState, Callbacks, PhysicsContext, RapierData};
+
+pub fn load(loader: &mut Loader) {
+    loader.load_raw_file("shiba.glb");
+}
 
 pub fn elastic_color_model_demo(
     device: RenderDevice,
@@ -14,11 +18,9 @@ pub fn elastic_color_model_demo(
     _callbacks: &mut Callbacks,
     _assets: &Dependencies,
 ) -> PhysicsContext {
-    let mut file = File::open("assets/shiba.glb").expect("Failed to open GLB file");
-    let mut buffer = Vec::new();
-    file.read_to_end(&mut buffer).expect("Failed to read file");
+    let buffer = &assets.get_data("shiba.glb").unwrap().data;
     let pc_grid = load_model_with_colors(
-        &buffer,
+        buffer,
         Transform3::from_matrix_unchecked(
             Isometry3::from_parts(
                 Vector3::new(0.0, 6.0, 0.0).into(),
