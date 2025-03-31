@@ -1,9 +1,16 @@
 //! This work is dual licensed under the Apache License v2.0 and the MIT license (SPDX: Apache-2.0, MIT).
+//!
+//! Original source: https://gist.github.com/jakkos-net/7f1d2806fae0288a11f3eb0840a11b04
+//!
+//! Changes:
+//! - plugin addition.
+//!
 //! usage example:
 //! fn example_system(mut text_gizmos: ResMut<TextGizmos>) {
 //!     text_gizmos.add("this is a text gizmo!", Vec3::ZERO, 10.0, Color::WHITE);
 //! }
-//! remember to include [`TextGizmosPlugin`]:
+//!
+//! Remember to include [`TextGizmosPlugin`]:
 
 pub struct TextGizmosPlugin;
 
