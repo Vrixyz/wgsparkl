@@ -2,7 +2,7 @@ use bevy::color::palettes;
 use wgsparkl3d::solver::ParticlePhase;
 use wgsparkl3d::wgrapier::dynamics::body::{BodyCoupling, BodyCouplingEntry};
 use wgsparkl_testbed3d::gizmos::TestbedGizmos;
-use wgsparkl_testbed3d::{wgsparkl, Callback, Callbacks, RapierData};
+use wgsparkl_testbed3d::{wgsparkl, Callback, Callbacks, RapierData, Rendering};
 
 use bevy::render::renderer::RenderDevice;
 use nalgebra::{vector, Vector2, Vector3};
@@ -67,12 +67,13 @@ pub fn configurations_demo(
     let mut display_text_at_world_pos = |world_pos: bevy::math::Vec3, text: String| {
         callbacks.0.push(Callback {
             callback: Box::new(
-                move |_render,
-                      _physics,
-                      _timestamps,
-                      _app_state,
-                      text_gizmos: &mut TestbedGizmos| {
-                    text_gizmos.add_text(&text, world_pos, 42f32, palettes::css::CORAL);
+                move |render: Option<Rendering>, _physics, _timestamps, _app_state| {
+                    render.unwrap().text_gizmos.add_text(
+                        &text,
+                        world_pos,
+                        42f32,
+                        palettes::css::CORAL,
+                    );
                 },
             ),
             run_when_paused: true,

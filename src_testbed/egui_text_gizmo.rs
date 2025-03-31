@@ -18,6 +18,7 @@ use bevy::{prelude::*, window::PrimaryWindow};
 use bevy_egui::{egui, EguiContext};
 use std::collections::VecDeque;
 
+/// Displays text in immediate mode.
 #[derive(Resource, Default)]
 pub struct TextGizmos(VecDeque<TextGizmo>);
 

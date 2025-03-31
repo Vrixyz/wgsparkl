@@ -134,11 +134,7 @@ pub fn demo(
 fn move_knife_function(body_handle: RigidBodyHandle) -> Callback {
     Callback {
         callback: Box::new(
-            move |_render,
-                  physics: &mut PhysicsContext,
-                  _timestamps,
-                  app_state: &AppState,
-                  _text_gizmos| {
+            move |_render, physics: &mut PhysicsContext, _timestamps, app_state: &AppState| {
                 let t = app_state.physics_time_seconds as f32;
 
                 let body = physics.rapier_data.bodies.get_mut(body_handle).unwrap();

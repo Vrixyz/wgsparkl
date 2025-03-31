@@ -2,7 +2,7 @@ use crate::egui_text_gizmo::TextGizmos;
 use crate::gizmos::TestbedGizmos;
 use crate::instancing::InstanceMaterialData;
 use crate::startup::RigidParticlesTag;
-use crate::{AppState, Callbacks, PhysicsContext, RenderContext, RunState, Timestamps};
+use crate::{AppState, Callbacks, PhysicsContext, RenderContext, Rendering, RunState, Timestamps};
 use async_channel::{Receiver, Sender};
 use bevy::prelude::*;
 use bevy::render::renderer::{RenderDevice, RenderQueue};
@@ -30,16 +30,17 @@ pub fn callbacks(
     mut text_gizmos: ResMut<TextGizmos>,
 ) {
     for callback in callbacks.0.iter_mut() {
-        let mut testbed_gizmos = TestbedGizmos::new(&mut text_gizmos);
         if callback.run_when_paused == false && app_state.run_state == RunState::Paused {
             continue;
         }
         (callback.callback)(
-            Some(&mut render),
+            Some(Rendering {
+                render: &mut render,
+                text_gizmos: TestbedGizmos::new(&mut text_gizmos),
+            }),
             &mut physics,
             timings.as_ref(),
             &app_state,
-            &mut testbed_gizmos,
         );
     }
 }

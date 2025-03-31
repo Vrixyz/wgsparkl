@@ -127,20 +127,21 @@ pub struct PhysicsContext {
 #[derive(Resource, Default)]
 pub struct Callbacks(pub Vec<Callback>);
 
+/// Wrapper for the different rendering capabilities of the testbed.
+pub struct Rendering<'a> {
+    pub render: &'a mut RenderContext,
+    pub text_gizmos: TestbedGizmos<'a>,
+}
+
 pub struct Callback {
     pub callback: Box<
-        dyn FnMut(
-                Option<&mut RenderContext>,
-                &mut PhysicsContext,
-                &Timestamps,
-                &AppState,
-                &mut TestbedGizmos,
-            ) + Send
-            + Sync,
+        dyn FnMut(Option<Rendering>, &mut PhysicsContext, &Timestamps, &AppState) + Send + Sync,
     >,
     pub run_when_paused: bool,
 }
 
+/// Stores materials and meshes for physics colliders handled by the testbed,
+/// and their mappings to Bevy entities.
 #[derive(Resource, Default)]
 pub struct RenderContext {
     pub instanced_materials: InstancedMaterials,
