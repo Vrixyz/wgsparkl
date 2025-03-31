@@ -57,7 +57,7 @@ pub fn demo(
     };
     let mut rapier_data = RapierData::default();
     if !app_state.restarting {
-        app_state.num_substeps = 30;
+        app_state.num_substeps = 20;
         app_state.gravity_factor = 1.0;
     };
     default_scene::spawn_ground_and_walls(&mut rapier_data);

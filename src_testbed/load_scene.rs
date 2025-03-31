@@ -41,16 +41,21 @@ pub type SceneInitFn = Box<
 pub type SceneLoadFn = Box<dyn FnMut(&mut Loader) + Send + Sync>;
 
 impl SceneInits {
+    /// Initialize the scene with the given ID.
+    /// This will call the corresponding [`SceneLoadFn`] from [`SceneInits`] if present.
+    ///
+    /// Then, when all dependencies are loaded, it will call the [`SceneInitFn`] from [`SceneInits`] to initialize the scene.
     pub fn init_scene(&self, commands: &mut Commands, scene_id: usize) {
         commands.run_system(self.reset_app_state);
         commands.set_state(SceneState::Loading);
 
         commands.run_system_cached_with(start_scene_loading, scene_id);
     }
-    pub fn on_scene_loaded(&self, commands: &mut Commands, scene_id: usize) {
+
+    /// Called when entering [`SceneState::Loaded`] state.
+    fn on_scene_loaded(&self, commands: &mut Commands, scene_id: usize) {
         commands.run_system_cached_with(run_scene_init, scene_id);
         commands.run_system(self.reset_graphics);
-        commands.set_state(SceneState::Loaded);
     }
 }
 
