@@ -1,5 +1,3 @@
-use std::time::Duration;
-
 use bevy::{
     asset::{io::Reader, Asset, AssetLoader, LoadContext},
     reflect::Reflect,
@@ -37,15 +35,15 @@ impl AssetLoader for FileBytesLoader {
     async fn load(
         &self,
         reader: &mut dyn Reader,
-        settings: &(),
-        load_context: &mut LoadContext<'_>,
+        _settings: &(),
+        _load_context: &mut LoadContext<'_>,
     ) -> Result<Self::Asset, Self::Error> {
         let mut bytes = Vec::new();
 
         reader
             .read_to_end(&mut bytes)
             .await
-            .map_err(|err| FileBytesLoaderError::Unknown)?;
+            .map_err(|_err| FileBytesLoaderError::Unknown)?;
 
         Ok(FileBytes { data: bytes })
     }

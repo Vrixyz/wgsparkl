@@ -16,7 +16,7 @@ pub fn sand_demo(
     device: RenderDevice,
     app_state: &mut AppState,
     _callbacks: &mut Callbacks,
-    assets: &Dependencies,
+    _assets: &Dependencies,
 ) -> PhysicsContext {
     let mut rapier_data = RapierData::default();
     let device = device.wgpu_device();

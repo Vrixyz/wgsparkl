@@ -99,8 +99,8 @@ pub fn run_scene_init(
     device: Res<RenderDevice>,
     mut app_state: ResMut<AppState>,
     mut callbacks: ResMut<Callbacks>,
-    mut file_bytes: Res<Assets<FileBytes>>,
-    mut loading_assets: Res<LoadingAssets>,
+    file_bytes: Res<Assets<FileBytes>>,
+    loading_assets: Res<LoadingAssets>,
 ) {
     commands.insert_resource(scenes.scenes[scene_id.0].1(
         device.clone(),

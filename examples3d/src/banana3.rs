@@ -1,6 +1,3 @@
-use std::fs::File;
-use std::io::Read;
-
 use crate::utils::default_scene::{self, SAMPLE_PER_UNIT};
 
 use bevy::color::palettes::css;
@@ -11,7 +8,7 @@ use rapier3d::prelude::{ColliderBuilder, RigidBodyBuilder, SharedShape, TriMeshF
 use wgsparkl3d::load_mesh3d::load_gltf::{load_model_trimeshes, load_model_with_colors};
 use wgsparkl3d::pipeline::MpmData;
 use wgsparkl3d::solver::SimulationParams;
-use wgsparkl_testbed3d::load_scene::{Dependencies, Loader, LoadingAssets};
+use wgsparkl_testbed3d::load_scene::{Dependencies, Loader};
 use wgsparkl_testbed3d::Callbacks;
 use wgsparkl_testbed3d::{AppState, PhysicsContext};
 use wgsparkl_testbed3d::{Callback, RapierData};
