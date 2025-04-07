@@ -1,3 +1,4 @@
+use wgsparkl_testbed3d::load_scene::Dependencies;
 use wgsparkl_testbed3d::{wgsparkl, Callbacks, RapierData};
 
 use bevy::render::renderer::RenderDevice;
@@ -15,6 +16,7 @@ pub fn sand_demo(
     device: RenderDevice,
     app_state: &mut AppState,
     _callbacks: &mut Callbacks,
+    _assets: &Dependencies,
 ) -> PhysicsContext {
     let mut rapier_data = RapierData::default();
     let device = device.wgpu_device();
