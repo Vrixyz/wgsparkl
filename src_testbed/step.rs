@@ -1,6 +1,8 @@
+use crate::egui_text_gizmo::TextGizmos;
+use crate::gizmos::TestbedGizmos;
 use crate::instancing::InstanceMaterialData;
 use crate::startup::RigidParticlesTag;
-use crate::{AppState, Callbacks, PhysicsContext, RenderContext, RunState, Timestamps};
+use crate::{AppState, Callbacks, PhysicsContext, RenderContext, Rendering, RunState, Timestamps};
 use async_channel::{Receiver, Sender};
 use bevy::prelude::*;
 use bevy::render::renderer::{RenderDevice, RenderQueue};
@@ -25,10 +27,17 @@ pub fn callbacks(
     app_state: ResMut<AppState>,
     timings: Res<Timestamps>,
     mut callbacks: ResMut<Callbacks>,
+    mut text_gizmos: ResMut<TextGizmos>,
 ) {
-    for to_call in callbacks.0.iter_mut() {
-        to_call(
-            Some(&mut render),
+    for callback in callbacks.0.iter_mut() {
+        if callback.run_when_paused == false && app_state.run_state == RunState::Paused {
+            continue;
+        }
+        (callback.callback)(
+            Some(Rendering {
+                render: &mut render,
+                text_gizmos: TestbedGizmos::new(&mut text_gizmos),
+            }),
             &mut physics,
             timings.as_ref(),
             &app_state,
@@ -243,7 +252,12 @@ pub fn step_simulation_legacy(
                 timestamps: Some(timestamps),
                 ..Default::default()
             };
-
+            // `GpuTimestamps` uses a buffer of 2 `Timestamps`, one for the start and one for the end of the operation,
+            // it's holding 9 floats (see `timings` below).
+            assert!(
+                timestamps_ms.len() >= num_substeps * 2 * 10,
+                "GpuTimestamps should be initialized with a bigger size"
+            );
             for i in 0..num_substeps {
                 let mut timings = [
                     &mut new_timings.update_rigid_particles,

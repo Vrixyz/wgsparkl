@@ -7,6 +7,8 @@ pub extern crate wgsparkl2d as wgsparkl;
 pub extern crate wgsparkl3d as wgsparkl;
 
 use bevy::render::renderer::RenderDevice;
+use egui_text_gizmo::TextGizmosPlugin;
+use gizmos::TestbedGizmos;
 #[cfg(feature = "dim2")]
 pub use instancing2d as instancing;
 #[cfg(feature = "dim3")]
@@ -18,6 +20,8 @@ pub mod instancing2d;
 #[cfg(feature = "dim3")]
 pub mod instancing3d;
 
+mod egui_text_gizmo;
+pub mod gizmos;
 mod hot_reload;
 pub mod prep_vertex_buffer;
 mod rigid_graphics;
@@ -56,6 +60,7 @@ pub fn init_testbed(app: &mut App) {
         ))
         .add_plugins(instancing::ParticlesMaterialPlugin)
         .add_plugins(bevy_egui::EguiPlugin)
+        .add_plugins(TextGizmosPlugin)
         .init_resource::<SceneInits>()
         .init_resource::<Callbacks>()
         .add_systems(Startup, startup::setup_app)
@@ -63,9 +68,12 @@ pub fn init_testbed(app: &mut App) {
             Update,
             (
                 ui::update_ui,
-                (step::step_simulation, step::callbacks)
-                    .chain()
-                    .run_if(|state: Res<AppState>| state.run_state != RunState::Paused),
+                (
+                    step::step_simulation
+                        .run_if(|state: Res<AppState>| state.run_state != RunState::Paused),
+                    step::callbacks,
+                )
+                    .chain(),
                 rigid_graphics::update_rigid_graphics,
                 hot_reload::handle_hot_reloading,
             )
@@ -119,12 +127,21 @@ pub struct PhysicsContext {
 #[derive(Resource, Default)]
 pub struct Callbacks(pub Vec<Callback>);
 
-pub type Callback = Box<
-    dyn FnMut(Option<&mut RenderContext>, &mut PhysicsContext, &Timestamps, &AppState)
-        + Send
-        + Sync,
->;
+/// Wrapper for the different rendering capabilities of the testbed.
+pub struct Rendering<'a> {
+    pub render: &'a mut RenderContext,
+    pub text_gizmos: TestbedGizmos<'a>,
+}
 
+pub struct Callback {
+    pub callback: Box<
+        dyn FnMut(Option<Rendering>, &mut PhysicsContext, &Timestamps, &AppState) + Send + Sync,
+    >,
+    pub run_when_paused: bool,
+}
+
+/// Stores materials and meshes for physics colliders handled by the testbed,
+/// and their mappings to Bevy entities.
 #[derive(Resource, Default)]
 pub struct RenderContext {
     pub instanced_materials: InstancedMaterials,

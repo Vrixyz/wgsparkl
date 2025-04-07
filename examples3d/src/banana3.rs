@@ -55,7 +55,7 @@ pub fn demo(
         app_state.num_substeps = 30;
         app_state.gravity_factor = 1.0;
     };
-    default_scene::spawn_ground_and_walls(&mut rapier_data);
+    default_scene::spawn_ground_and_walls(&mut rapier_data, 1f32);
 
     let mut particles = vec![];
     for (pos, color) in pc_grid {
@@ -132,51 +132,55 @@ pub fn demo(
 }
 
 fn move_knife_function(body_handle: RigidBodyHandle) -> Callback {
-    Box::new(
-        move |_render, physics: &mut PhysicsContext, _timestamps, app_state: &AppState| {
-            let t = app_state.physics_time_seconds as f32;
+    Callback {
+        callback: Box::new(
+            move |_render, physics: &mut PhysicsContext, _timestamps, app_state: &AppState| {
+                let t = app_state.physics_time_seconds as f32;
 
-            let body = physics.rapier_data.bodies.get_mut(body_handle).unwrap();
-            let length = 1.31;
-            let width = 0.35;
-            let x_pos = 2.8;
-            let y_pos = 1.3;
-            let z_pos = -1.5;
-            let velocity = 0.9;
-            let extended_width = 0.15; // extended width for the horizontal move to the right
-            let period =
-                (2f32 * length + width + extended_width + 2f32 * width + extended_width) / velocity;
+                let body = physics.rapier_data.bodies.get_mut(body_handle).unwrap();
+                let length = 1.31;
+                let width = 0.35;
+                let x_pos = 2.8;
+                let y_pos = 1.3;
+                let z_pos = -1.5;
+                let velocity = 0.9;
+                let extended_width = 0.15; // extended width for the horizontal move to the right
+                let period =
+                    (2f32 * length + width + extended_width + 2f32 * width + extended_width)
+                        / velocity;
 
-            let i = (t / period).floor();
-            let dis = velocity * (t - period * i);
+                let i = (t / period).floor();
+                let dis = velocity * (t - period * i);
 
-            // Determine the new position of the knife based on the current displacement
-            let new_pos = if dis < length {
-                // Moving downwards
-                vector![x_pos - width * i, y_pos - dis, z_pos]
-            } else if length <= dis && dis < length + width + extended_width {
-                // Moving horizontally to the right with extended width
-                vector![x_pos - width * i + (dis - length), y_pos - length, z_pos]
-            } else if length + width + extended_width <= dis
-                && dis < 2f32 * length + width + extended_width
-            {
-                // Moving upwards
-                vector![
-                    x_pos - width * i + width + extended_width,
-                    y_pos - length + dis - (length + width + extended_width),
-                    z_pos
-                ]
-            } else {
-                // Moving horizontally to the left, back to the starting x position
-                vector![
-                    x_pos - width * i + width + extended_width
-                        - (dis - 2.0 * length - width - extended_width),
-                    y_pos,
-                    z_pos
-                ]
-            };
+                // Determine the new position of the knife based on the current displacement
+                let new_pos = if dis < length {
+                    // Moving downwards
+                    vector![x_pos - width * i, y_pos - dis, z_pos]
+                } else if length <= dis && dis < length + width + extended_width {
+                    // Moving horizontally to the right with extended width
+                    vector![x_pos - width * i + (dis - length), y_pos - length, z_pos]
+                } else if length + width + extended_width <= dis
+                    && dis < 2f32 * length + width + extended_width
+                {
+                    // Moving upwards
+                    vector![
+                        x_pos - width * i + width + extended_width,
+                        y_pos - length + dis - (length + width + extended_width),
+                        z_pos
+                    ]
+                } else {
+                    // Moving horizontally to the left, back to the starting x position
+                    vector![
+                        x_pos - width * i + width + extended_width
+                            - (dis - 2.0 * length - width - extended_width),
+                        y_pos,
+                        z_pos
+                    ]
+                };
 
-            body.set_translation(new_pos, true);
-        },
-    )
+                body.set_translation(new_pos, true);
+            },
+        ),
+        run_when_paused: false,
+    }
 }
