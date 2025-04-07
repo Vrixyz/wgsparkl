@@ -1,5 +1,3 @@
-use std::time::Duration;
-
 use bevy::{
     asset::{io::Reader, Asset, AssetLoader, LoadContext},
     reflect::Reflect,

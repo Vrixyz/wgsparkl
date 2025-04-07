@@ -17,7 +17,7 @@ pub fn elastic_demo(
     device: RenderDevice,
     app_state: &mut AppState,
     _callbacks: &mut Callbacks,
-    assets: &Dependencies,
+    _assets: &Dependencies,
 ) -> PhysicsContext {
     let device = device.wgpu_device();
     let mut rapier_data = RapierData::default();

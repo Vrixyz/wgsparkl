@@ -2,7 +2,6 @@ use crate::utils::default_scene::{self, SAMPLE_PER_UNIT};
 
 use bevy::{math::Vec3, prelude::*, render::renderer::RenderDevice};
 use nalgebra::{vector, Isometry3, Transform3, UnitQuaternion, Vector3};
-use std::{fs::File, io::Read};
 use wgsparkl3d::load_mesh3d::load_gltf::load_model_with_colors;
 use wgsparkl3d::{pipeline::MpmData, solver::SimulationParams};
 use wgsparkl_testbed3d::load_scene::{Dependencies, Loader};
