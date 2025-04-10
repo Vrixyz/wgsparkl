@@ -6,7 +6,7 @@ pub extern crate wgsparkl2d as wgsparkl;
 #[cfg(feature = "dim3")]
 pub extern crate wgsparkl3d as wgsparkl;
 
-use bevy::render::renderer::RenderDevice;
+use bevy::render::renderer::{RenderDevice, RenderQueue};
 #[cfg(feature = "dim2")]
 pub use instancing2d as instancing;
 #[cfg(feature = "dim3")]
@@ -115,7 +115,7 @@ pub struct PhysicsContext {
 pub struct Callbacks(pub Vec<Callback>);
 
 pub type Callback = Box<
-    dyn FnMut(Option<&mut RenderContext>, &mut PhysicsContext, &Timestamps, &AppState)
+    dyn FnMut(Option<&mut RenderContext>, &mut PhysicsContext, &Timestamps, &AppState, RenderQueue)
         + Send
         + Sync,
 >;
