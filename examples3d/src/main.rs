@@ -4,6 +4,7 @@ use wgsparkl_testbed3d::{init_testbed, SceneInitFn, SceneInits};
 pub mod utils;
 
 mod banana3;
+mod bowl3;
 mod elastic_cut3;
 mod glb_to_point_cloud_color;
 mod heightfield3;
@@ -24,6 +25,7 @@ pub fn main() {
 fn register_scenes(world: &mut World) {
     let scenes: Vec<(String, SceneInitFn)> = vec![
         ("sand".to_string(), Box::new(sand3::sand_demo)),
+        ("bowl".to_string(), Box::new(bowl3::bowl_demo)),
         (
             "heightfield".to_string(),
             Box::new(heightfield3::heightfield_demo),
