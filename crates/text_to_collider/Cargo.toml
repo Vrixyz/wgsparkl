@@ -12,6 +12,7 @@ env_logger = "*"
 cosmic-text = "*"
 image = "*"
 parry3d = "*"
+rkyv = { version = "0.8" }
 
 [dev-dependencies]
 bevy = "0.15"
