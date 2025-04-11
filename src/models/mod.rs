@@ -17,15 +17,18 @@ pub struct GpuModels {
 }
 
 impl GpuModels {
-    pub fn from_particles(device: &Device, particles: &[Particle]) -> Self {
+    pub fn from_particles(device: &Device, particles: &[Particle], maximum_size: usize) -> Self {
+        let additional_unused_particles = maximum_size - particles.len();        
         let models: Vec<_> = particles.iter().map(|p| p.model).collect();
         let plasticity: Vec<_> = particles
             .iter()
             .map(|p| p.plasticity.unwrap_or(DruckerPrager::new(-1.0, -1.0)))
+            .chain(vec![DruckerPrager::new(-1.0, -1.0); additional_unused_particles])
             .collect();
         let plastic_states: Vec<_> = particles
             .iter()
             .map(|_| DruckerPragerPlasticState::default())
+            .chain(vec![DruckerPragerPlasticState::default(); additional_unused_particles])
             .collect();
         let phases: Vec<_> = particles
             .iter()
@@ -35,6 +38,10 @@ impl GpuModels {
                     max_stretch: -1.0,
                 })
             })
+            .chain(vec![ParticlePhase {
+                phase: 0.0,
+                max_stretch: -1.0,
+            }; additional_unused_particles])
             .collect();
         Self {
             linear_elasticity: GpuVector::init(device, &models, BufferUsages::STORAGE),
@@ -46,6 +53,10 @@ impl GpuModels {
             ),
             phases: GpuVector::init(device, &phases, BufferUsages::STORAGE),
         }
+    }
+
+    pub fn push() {
+
     }
 }
 
