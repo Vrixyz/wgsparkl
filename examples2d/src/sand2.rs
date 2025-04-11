@@ -163,6 +163,7 @@ pub fn sand_demo(
         device,
         params,
         &particles,
+        particles.len(),
         &rapier_data.bodies,
         &rapier_data.colliders,
         cell_width,

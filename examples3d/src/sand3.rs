@@ -1,3 +1,5 @@
+use std::ptr::dangling;
+
 use wgsparkl_testbed3d::{wgsparkl, Callbacks, RapierData};
 
 use bevy::render::renderer::RenderDevice;
@@ -88,6 +90,7 @@ pub fn sand_demo(
         device,
         params,
         &particles,
+        particles.len(),
         &rapier_data.bodies,
         &rapier_data.colliders,
         cell_width,

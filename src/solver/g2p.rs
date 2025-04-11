@@ -43,6 +43,7 @@ impl WgG2P {
                 1,
                 [
                     particles.positions.buffer(),
+                    particles.current_size.buffer(),
                     particles.dynamics.buffer(),
                     particles.sorted_ids.buffer(),
                     sim_params.params.buffer(),

@@ -4,7 +4,7 @@ use crate::solver::ParticlePhase;
 use encase::ShaderType;
 use nalgebra::{vector, Matrix2, Point2, Vector2};
 use rapier::geometry::{ColliderSet, Polyline, Segment};
-use wgcore::tensor::GpuVector;
+use wgcore::tensor::{GpuScalar, GpuVector};
 use wgcore::Shader;
 use wgparry::shape::ShapeBuffers;
 use wgpu::{BufferUsages, Device};
@@ -148,35 +148,121 @@ pub struct GpuParticles {
     pub dynamics: GpuVector<ParticleDynamics>,
     pub sorted_ids: GpuVector<u32>,
     pub node_linked_lists: GpuVector<u32>,
+    /// The number of particles in use.
+    ///
+    /// As GPU buffers have to be re-created from the ground up to be resized,
+    /// it's an expensive operation, so we can allocate big buffers and keep track
+    /// of the used size.
+    pub current_size: GpuScalar<u32>,
+    /// As current_size is a uniform buffer, we can only change it from CPU, so it's easy to cache.
+    ///
+    /// If we don't cache it, we should retrieve it from current_size which is stored on GPU.
+    pub current_size_cached: u32,
+    /// Current actual size of the buffer on the GPU.
+    pub maximum_size: u32,
 }
 
 impl GpuParticles {
     pub fn is_empty(&self) -> bool {
-        self.positions.is_empty()
+        self.current_size_cached == 0
     }
 
     pub fn len(&self) -> usize {
-        self.positions.len() as usize
+        self.current_size_cached as usize
     }
 
-    pub fn from_particles(device: &Device, particles: &[Particle]) -> Self {
-        let positions: Vec<_> = particles.iter().map(|p| p.position).collect();
-        let dynamics: Vec<_> = particles.iter().map(|p| p.dynamics).collect();
-
+    /// Creates a new GPU particle buffer.
+    ///
+    /// `maximum_size` should be equal or greater than `particles.len()`.
+    /// Setting a greater value will allow to add more particles later.
+    pub fn from_particles(device: &Device, particles: &[Particle], maximum_size: usize) -> Self {
+        let particles_len = particles.len();
+        assert!(
+            maximum_size >= particles_len,
+            "`maximum_size` should be equal or greater than `particles.len()`."
+        );
+        let additional_unused_particles = maximum_size - particles_len;
+        let positions: Vec<_> = particles
+            .iter()
+            .map(|p| p.position)
+            .chain(vec![vector![0.0, 0.0]; additional_unused_particles])
+            .collect::<Vec<_>>();
+        let dynamics: Vec<_> = particles
+            .iter()
+            .map(|p| p.dynamics)
+            .chain(vec![
+                ParticleDynamics::with_density(0.0, 0.0);
+                additional_unused_particles
+            ])
+            .collect();
         Self {
             positions: GpuVector::init(
                 device,
                 &positions,
-                BufferUsages::STORAGE | BufferUsages::COPY_SRC,
+                BufferUsages::STORAGE | BufferUsages::COPY_SRC | BufferUsages::COPY_DST,
             ),
-            dynamics: GpuVector::encase(device, &dynamics, BufferUsages::STORAGE),
-            sorted_ids: GpuVector::uninit(device, particles.len() as u32, BufferUsages::STORAGE),
+            dynamics: GpuVector::encase(
+                device,
+                &dynamics,
+                BufferUsages::STORAGE | BufferUsages::COPY_DST,
+            ),
+            sorted_ids: GpuVector::uninit(
+                device,
+                maximum_size as u32,
+                BufferUsages::STORAGE | BufferUsages::COPY_DST,
+            ),
             node_linked_lists: GpuVector::uninit(
                 device,
-                particles.len() as u32,
-                BufferUsages::STORAGE,
+                maximum_size as u32,
+                BufferUsages::STORAGE | BufferUsages::COPY_DST,
             ),
+            current_size: GpuScalar::init(
+                device,
+                particles_len as u32,
+                BufferUsages::UNIFORM | BufferUsages::COPY_DST,
+            ),
+            current_size_cached: particles_len as u32,
+            maximum_size: maximum_size as u32,
         }
+    }
+
+    // TODO: push multiple particles at once.
+    /// This is designed to work in conjunction with [`crate::models::GpuModels::push`]
+    pub fn push(&mut self, queue: &wgpu::Queue, particle: &Particle) {
+        if self.maximum_size == self.current_size_cached {
+            eprintln!("Particle buffer is full.");
+            return;
+        }
+        println!(
+            "ParticleDynamics min_size: {} bytes",
+            ParticleDynamics::min_size().get()
+        );
+        println!("Cdf min_size: {} bytes", Cdf::min_size().get());
+        println!("pushed a new particle!");
+        // TODO: provide a helper in Tensor to push values?
+
+        // Push position
+        let offset = self.current_size_cached as u64 * Vector2::<f32>::min_size().get();
+        let position = particle.position;
+        // Turn value into &[u8] (raw bytes)
+        let bytes = bytemuck::bytes_of(&position);
+        queue.write_buffer(&self.positions.buffer(), offset, bytes);
+
+        // Push dynamics.
+        let offset = self.current_size_cached as u64 * ParticleDynamics::min_size().get();
+        let dynamics = particle.dynamics;
+        // Turn value into &[u8] (raw bytes)
+        let mut buffer = encase::StorageBuffer::new(Vec::<u8>::new());
+        buffer.write(&dynamics).unwrap();
+        let bytes = buffer.as_ref();
+        queue.write_buffer(&self.dynamics.buffer(), offset, bytes);
+
+        self.current_size_cached += 1;
+        queue.write_buffer(
+            &self.current_size.buffer(),
+            0,
+            bytemuck::bytes_of(&self.current_size_cached),
+        );
     }
 }
 
