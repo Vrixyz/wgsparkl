@@ -5,18 +5,20 @@
 
 
 @group(1) @binding(0)
-var<storage, read_write> particles_pos: array<Particle::Position>;
+var<uniform, read> num_particles u32;
 @group(1) @binding(1)
-var<storage, read_write> scan_values: array<atomic<u32>>; // This has to be atomic for finalize_particles_sort. Should it be a different buffer?
+var<storage, read_write> particles_pos: array<Particle::Position>;
 @group(1) @binding(2)
-var<storage, read_write> sorted_particle_ids: array<u32>;
+var<storage, read_write> scan_values: array<atomic<u32>>; // This has to be atomic for finalize_particles_sort. Should it be a different buffer?
 @group(1) @binding(3)
-var<storage, read_write> particle_node_linked_lists: array<u32>;
+var<storage, read_write> sorted_particle_ids: array<u32>;
 @group(1) @binding(4)
-var<storage, read> rigid_particles_pos: array<Particle::Position>;
+var<storage, read_write> particle_node_linked_lists: array<u32>;
 @group(1) @binding(5)
-var<storage, read_write> rigid_particle_node_linked_lists: array<u32>;
+var<storage, read> rigid_particles_pos: array<Particle::Position>;
 @group(1) @binding(6)
+var<storage, read_write> rigid_particle_node_linked_lists: array<u32>;
+@group(1) @binding(7)
 var<storage, read_write> rigid_particle_needs_block: array<atomic<u32>>;
 
 // Disable this kernel on macos because of the underlying compareExchangeMap which is
