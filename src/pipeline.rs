@@ -99,6 +99,7 @@ impl MpmData {
         device: &Device,
         params: SimulationParams,
         particles: &[Particle],
+        particles_max_count: usize,
         bodies: &RigidBodySet,
         colliders: &ColliderSet,
         cell_width: f32,
@@ -119,6 +120,7 @@ impl MpmData {
             device,
             params,
             particles,
+            particles_max_count,
             bodies,
             colliders,
             coupling,
@@ -131,6 +133,7 @@ impl MpmData {
         device: &Device,
         params: SimulationParams,
         particles: &[Particle],
+        particles_max_count: usize,
         bodies: &RigidBodySet,
         colliders: &ColliderSet,
         coupling: Vec<BodyCouplingEntry>,
@@ -140,8 +143,8 @@ impl MpmData {
         let sampling_step = cell_width; // TODO: * 1.5 ?
         let bodies = GpuBodySet::from_rapier(device, bodies, colliders, &coupling);
         let sim_params = GpuSimulationParams::new(device, params);
-        let models = GpuModels::from_particles(device, particles);
-        let particles = GpuParticles::from_particles(device, particles);
+        let models = GpuModels::from_particles(device, particles, particles_max_count);
+        let particles = GpuParticles::from_particles(device, particles, particles_max_count);
         let rigid_particles =
             GpuRigidParticles::from_rapier(device, colliders, &bodies, &coupling, sampling_step);
         let grid = GpuGrid::with_capacity(device, grid_capacity, cell_width);
@@ -169,6 +172,17 @@ impl MpmData {
 
     pub fn coupling(&self) -> &[BodyCouplingEntry] {
         &self.coupling
+    }
+
+    pub fn push_particle(&mut self, queue: &wgpu::Queue, particle: &Particle) -> Result<usize, ()> {
+        if self.particles.maximum_size == self.particles.current_size_cached {
+            eprintln!("Particle buffers are full.");
+            return Err(());
+        }
+        self.models
+            .push(queue, particle, self.particles.current_size_cached);
+        self.particles.push(queue, particle);
+        return Ok(1);
     }
 }
 
@@ -325,6 +339,7 @@ mod test {
             gpu.device(),
             params,
             &cpu_particles,
+            100_000,
             &RigidBodySet::default(),
             &ColliderSet::default(),
             cell_width,

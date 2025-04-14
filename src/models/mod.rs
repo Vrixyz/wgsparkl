@@ -17,15 +17,34 @@ pub struct GpuModels {
 }
 
 impl GpuModels {
-    pub fn from_particles(device: &Device, particles: &[Particle]) -> Self {
-        let models: Vec<_> = particles.iter().map(|p| p.model).collect();
+    pub fn from_particles(device: &Device, particles: &[Particle], maximum_size: usize) -> Self {
+        let additional_unused_particles = maximum_size - particles.len();
+        let models: Vec<_> = particles
+            .iter()
+            .map(|p| p.model)
+            .chain(vec![
+                ElasticCoefficients::from_young_modulus(
+                    2_000_000_000.0,
+                    0.2
+                );
+                additional_unused_particles
+            ])
+            .collect();
         let plasticity: Vec<_> = particles
             .iter()
             .map(|p| p.plasticity.unwrap_or(DruckerPrager::new(-1.0, -1.0)))
+            .chain(vec![
+                DruckerPrager::new(-1.0, -1.0);
+                additional_unused_particles
+            ])
             .collect();
         let plastic_states: Vec<_> = particles
             .iter()
             .map(|_| DruckerPragerPlasticState::default())
+            .chain(vec![
+                DruckerPragerPlasticState::default();
+                additional_unused_particles
+            ])
             .collect();
         let phases: Vec<_> = particles
             .iter()
@@ -35,17 +54,65 @@ impl GpuModels {
                     max_stretch: -1.0,
                 })
             })
+            .chain(vec![
+                ParticlePhase {
+                    phase: 0.0,
+                    max_stretch: -1.0,
+                };
+                additional_unused_particles
+            ])
             .collect();
         Self {
-            linear_elasticity: GpuVector::init(device, &models, BufferUsages::STORAGE),
-            drucker_prager_plasticity: GpuVector::init(device, &plasticity, BufferUsages::STORAGE),
+            linear_elasticity: GpuVector::init(
+                device,
+                &models,
+                BufferUsages::STORAGE | BufferUsages::COPY_DST,
+            ),
+            drucker_prager_plasticity: GpuVector::init(
+                device,
+                &plasticity,
+                BufferUsages::STORAGE | BufferUsages::COPY_DST,
+            ),
             drucker_prager_plastic_state: GpuVector::init(
                 device,
                 &plastic_states,
-                BufferUsages::STORAGE,
+                BufferUsages::STORAGE | BufferUsages::COPY_DST,
             ),
-            phases: GpuVector::init(device, &phases, BufferUsages::STORAGE),
+            phases: GpuVector::init(
+                device,
+                &phases,
+                BufferUsages::STORAGE | BufferUsages::COPY_DST,
+            ),
         }
+    }
+
+    pub fn push(&mut self, queue: &wgpu::Queue, particle: &Particle, current_size: u32) {
+        let model = particle.model;
+        let plasticity = particle
+            .plasticity
+            .unwrap_or(DruckerPrager::new(-1.0, -1.0));
+        let plastic_state = DruckerPragerPlasticState::default();
+        let phase = particle.phase.unwrap_or(ParticlePhase {
+            phase: 0.0,
+            max_stretch: -1.0,
+        });
+
+        // Push model
+        let offset = current_size as u64 * size_of::<ElasticCoefficients>() as u64;
+        let bytes = bytemuck::bytes_of(&model);
+        queue.write_buffer(&self.linear_elasticity.buffer(), offset, bytes);
+        // Push plasticity
+        let offset = current_size as u64 * size_of::<DruckerPrager>() as u64;
+        let bytes = bytemuck::bytes_of(&plasticity);
+        queue.write_buffer(&self.drucker_prager_plasticity.buffer(), offset, bytes);
+        // Push plastic_state
+        let offset = current_size as u64 * size_of::<DruckerPragerPlasticState>() as u64;
+        let bytes = bytemuck::bytes_of(&plastic_state);
+        queue.write_buffer(&self.drucker_prager_plastic_state.buffer(), offset, bytes);
+        // Push phase
+        let offset = current_size as u64 * size_of::<ParticlePhase>() as u64;
+        let bytes = bytemuck::bytes_of(&phase);
+        queue.write_buffer(&self.phases.buffer(), offset, bytes);
     }
 }
 

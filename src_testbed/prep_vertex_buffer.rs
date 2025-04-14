@@ -94,13 +94,14 @@ impl WgPrepVertexBuffer {
         KernelInvocationBuilder::new(queue, &self.main)
             .bind0([
                 vertex_buffer,
+                particles.current_size.buffer(),
                 particles.positions.buffer(),
                 particles.dynamics.buffer(),
                 grid.meta.buffer(),
                 params.params.buffer(),
                 config.buffer.buffer(),
             ])
-            .queue(particles.positions.len().div_ceil(64) as u32);
+            .queue(particles.current_size_cached.div_ceil(64) as u32);
 
         if let Some(vertex_buffer) = vertex_buffer_rigid_particles {
             KernelInvocationBuilder::new(queue, &self.main_rigid_particles)

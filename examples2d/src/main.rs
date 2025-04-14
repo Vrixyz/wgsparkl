@@ -1,6 +1,7 @@
 use bevy::prelude::*;
 use wgsparkl_testbed2d::{init_testbed, SceneInitFn, SceneInits};
 
+mod dynamic_add;
 mod elastic_cut2;
 mod elasticity2;
 mod sand2;
@@ -20,6 +21,10 @@ pub fn main() {
 fn register_scenes(world: &mut World) {
     let scenes: Vec<(String, SceneInitFn)> = vec![
         ("sand".to_string(), Box::new(sand2::sand_demo)),
+        (
+            "dynamic add".to_string(),
+            Box::new(dynamic_add::dynamic_demo),
+        ),
         ("elastic".to_string(), Box::new(elasticity2::elastic_demo)),
         (
             "elastic cut".to_string(),

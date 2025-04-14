@@ -103,6 +103,7 @@ pub fn elastic_cut_demo(
         device,
         params,
         &particles,
+        particles.len(),
         &rapier_data.bodies,
         &rapier_data.colliders,
         cell_width,
@@ -112,5 +113,6 @@ pub fn elastic_cut_demo(
         data,
         rapier_data,
         particles,
+        reset_graphics: false,
     }
 }

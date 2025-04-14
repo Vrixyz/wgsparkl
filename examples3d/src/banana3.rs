@@ -114,6 +114,7 @@ pub fn demo(
         device.wgpu_device(),
         params,
         &particles,
+        particles.len(),
         &rapier_data.bodies,
         &rapier_data.colliders,
         1f32 / default_scene::SAMPLE_PER_UNIT,
@@ -134,7 +135,7 @@ pub fn demo(
 fn move_knife_function(body_handle: RigidBodyHandle) -> Callback {
     let mut ticks = 0;
     Box::new(
-        move |_render, physics: &mut PhysicsContext, _timestamps, _app_state: &AppState| {
+        move |_render, physics: &mut PhysicsContext, _timestamps, _app_state: &AppState, _| {
             let t = ticks as f32 * physics.rapier_data.integration_parameters.dt;
             ticks += 1;
 

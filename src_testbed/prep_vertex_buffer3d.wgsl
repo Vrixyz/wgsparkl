@@ -7,15 +7,19 @@
 
 @group(0) @binding(0)
 var<storage, read_write> instances: array<InstanceData>;
+/// Stores the number of particles in use, because we cannot rely on `arrayLength(particles_pos)`,
+/// as the array may be bigger to allow more efficient dynamic addition or removal of particles.
 @group(0) @binding(1)
-var<storage, read> particles_pos: array<Particle::Position>;
+var<uniform> num_particles: u32;
 @group(0) @binding(2)
-var<storage, read> particles_dyn: array<Particle::Dynamics>;
+var<storage, read> particles_pos: array<Particle::Position>;
 @group(0) @binding(3)
-var<storage, read_write> grid: Grid::Grid;
+var<storage, read> particles_dyn: array<Particle::Dynamics>;
 @group(0) @binding(4)
-var<uniform> params: Params::SimulationParams;
+var<storage, read_write> grid: Grid::Grid;
 @group(0) @binding(5)
+var<uniform> params: Params::SimulationParams;
+@group(0) @binding(6)
 var<storage, read> config: RenderConfig;
 
 struct RenderConfig {
@@ -43,7 +47,7 @@ fn main(
 ) {
     let particle_id = tid.x;
 
-    if particle_id < arrayLength(&instances) {
+    if particle_id < num_particles {
         let def_grad = particles_dyn[particle_id].def_grad;
         instances[particle_id].deformation = def_grad;
         instances[particle_id].position = particles_pos[particle_id].pt;

@@ -69,8 +69,14 @@ impl WgGrid {
                         (grid.debug.buffer(), 8),
                     ],
                 )
-                .bind(1, [particles.positions.buffer()])
-                .queue((particles.len() as u32).div_ceil(GRID_WORKGROUP_SIZE));
+                .bind(
+                    1,
+                    [
+                        particles.current_size.buffer(),
+                        particles.positions.buffer(),
+                    ],
+                )
+                .queue(particles.current_size_cached.div_ceil(GRID_WORKGROUP_SIZE));
 
             // Ensure blocks exist wherever we have rigid particles that might affect
             // other blocks. This is done in two passes:
@@ -113,7 +119,6 @@ impl WgGrid {
                 )
                 .queue((rigid_particles.len() as u32).div_ceil(GRID_WORKGROUP_SIZE));
 
-            // TODO: handle grid buffer resizing
             sparse_grid_has_the_correct_size = true;
         }
 
@@ -149,7 +154,13 @@ impl WgGrid {
                     grid.active_blocks.buffer(),
                 ],
             )
-            .bind(1, [particles.positions.buffer()])
+            .bind(
+                1,
+                [
+                    particles.current_size.buffer(),
+                    particles.positions.buffer(),
+                ],
+            )
             .queue(n_groups);
 
         KernelInvocationBuilder::new(queue, &sort_module.copy_particles_len_to_scan_value)
@@ -157,7 +168,7 @@ impl WgGrid {
                 0,
                 [(grid.meta.buffer(), 0), (grid.active_blocks.buffer(), 2)],
             )
-            .bind_at(1, [(grid.scan_values.buffer(), 1)])
+            .bind_at(1, [(grid.scan_values.buffer(), 2)])
             .queue_indirect(n_block_groups.clone());
 
         prefix_sum_module.queue(queue, prefix_sum, &grid.scan_values);
@@ -167,7 +178,7 @@ impl WgGrid {
                 0,
                 [(grid.meta.buffer(), 0), (grid.active_blocks.buffer(), 2)],
             )
-            .bind_at(1, [(grid.scan_values.buffer(), 1)])
+            .bind_at(1, [(grid.scan_values.buffer(), 2)])
             .queue_indirect(n_block_groups.clone());
 
         // Reset here so the linked list heads get reset before `finalize_particles_sort` which
@@ -196,6 +207,7 @@ impl WgGrid {
             .bind(
                 1,
                 [
+                    particles.current_size.buffer(),
                     particles.positions.buffer(),
                     grid.scan_values.buffer(),
                     particles.sorted_ids.buffer(),
@@ -370,7 +382,8 @@ mod test {
             }
         }
 
-        let particles = GpuParticles::from_particles(gpu.device(), &cpu_particles);
+        let particles =
+            GpuParticles::from_particles(gpu.device(), &cpu_particles, cpu_particles.len());
         let grid = GpuGrid::with_capacity(gpu.device(), 100_000, cell_width);
         let mut prefix_sum = PrefixSumWorkspace::with_capacity(gpu.device(), 100_000);
         let mut queue = KernelInvocationQueue::new(gpu.device());

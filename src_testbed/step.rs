@@ -20,6 +20,7 @@ pub struct TimestampChannel {
 }
 
 pub fn callbacks(
+    render_queue: ResMut<RenderQueue>,
     mut render: ResMut<RenderContext>,
     mut physics: ResMut<PhysicsContext>,
     app_state: ResMut<AppState>,
@@ -32,6 +33,7 @@ pub fn callbacks(
             &mut physics,
             timings.as_ref(),
             &app_state,
+            &*render_queue,
         );
     }
 }

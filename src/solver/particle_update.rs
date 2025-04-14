@@ -54,6 +54,7 @@ impl WgParticleUpdate {
             .bind(
                 1,
                 [
+                    particles.current_size.buffer(),
                     particles.positions.buffer(),
                     particles.dynamics.buffer(),
                     models.linear_elasticity.buffer(),
@@ -64,7 +65,7 @@ impl WgParticleUpdate {
                 ],
             )
             // .bind(2, [bodies.shapes().buffer(), bodies.poses().buffer()])
-            .queue(particles.positions.len().div_ceil(64) as u32);
+            .queue(particles.len().div_ceil(64) as u32);
     }
 }
 

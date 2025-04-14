@@ -6,7 +6,7 @@ pub extern crate wgsparkl2d as wgsparkl;
 #[cfg(feature = "dim3")]
 pub extern crate wgsparkl3d as wgsparkl;
 
-use bevy::render::renderer::RenderDevice;
+use bevy::render::renderer::{RenderDevice, RenderQueue};
 #[cfg(feature = "dim2")]
 pub use instancing2d as instancing;
 #[cfg(feature = "dim3")]
@@ -54,6 +54,10 @@ pub fn init_testbed(app: &mut App) {
         .init_resource::<SceneInits>()
         .init_resource::<Callbacks>()
         .add_systems(Startup, startup::setup_app)
+        .add_systems(
+            Update,
+            startup::update_graphics.run_if(resource_exists::<PhysicsContext>),
+        )
         .add_systems(
             Update,
             (
@@ -108,13 +112,25 @@ pub struct PhysicsContext {
     pub data: MpmData,
     pub rapier_data: RapierData,
     pub particles: Vec<Particle>,
+    /// Flag to reset the graphics pipeline.
+    // TODO: pass the commands to the callback, so we can schedule a graphics reset,
+    //   or a more fine-grained update of the graphics pipeline.
+    pub reset_graphics: bool,
+}
+
+impl PhysicsContext {
+    pub fn push_particle(&mut self, queue: &RenderQueue, particle: &Particle) {
+        if self.data.push_particle(queue, particle).is_ok() {
+            self.particles.push(particle.clone());
+        }
+    }
 }
 
 #[derive(Resource, Default)]
 pub struct Callbacks(pub Vec<Callback>);
 
 pub type Callback = Box<
-    dyn FnMut(Option<&mut RenderContext>, &mut PhysicsContext, &Timestamps, &AppState)
+    dyn FnMut(Option<&mut RenderContext>, &mut PhysicsContext, &Timestamps, &AppState, &RenderQueue)
         + Send
         + Sync,
 >;
