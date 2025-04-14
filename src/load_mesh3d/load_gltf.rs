@@ -53,11 +53,21 @@ fn closest_point(
 /// Load a glb or gltf file and return a point cloud and a list of trimeshes.
 ///
 /// ```
-/// let mut file = File::open("path_to_file.glb").expect("Failed to open GLB file");
+/// use wgsparkl3d::load_mesh3d::load_gltf::load_model_with_colors;
+/// use nalgebra::Transform3;
+/// use std::fs::File;
+/// use std::io::Read;
+///
+/// let mut file = File::open("../../examples3d/assets/banana.glb").expect("Failed to open GLB file");
 /// let mut buffer = Vec::new();
 /// file.read_to_end(&mut buffer).expect("Failed to read file");
 ///
-/// let _ = load_model_with_colors(&buffer);
+/// let _ = load_model_with_colors(
+///     &buffer,
+///     Transform3::default(),
+///     None,
+///     0.1f32,
+/// );
 /// ```
 pub fn load_model_with_colors<S>(
     slice: S,
@@ -163,19 +173,21 @@ where
 /// Load a glb or gltf file into vertices and indices and its vertex colors from sampled texture.
 ///
 /// ```
-/// let mut file = File::open("path_to_file.glb").expect("Failed to open GLB file");
+/// use std::{fs::File, io::Read};
+/// use wgsparkl3d::load_mesh3d::load_gltf::load_model_with_vertex_colors;
+///
+/// let mut file = File::open("../../examples3d/assets/banana.glb").expect("Failed to open GLB file");
 /// let mut buffer = Vec::new();
 /// file.read_to_end(&mut buffer).expect("Failed to read file");
 ///
-/// let (gltf, buffers, _) = gltf::import_slice(slice).expect("Failed to parse GLB");
-///
-/// let _ = load_model_with_point_cloud(&buffer);
+/// let (colors, indices) = load_model_with_vertex_colors(&buffer);
 /// ```
+#[allow(clippy::type_complexity)]
 pub fn load_model_with_vertex_colors<S>(
     slice: S,
 ) -> (
-    Vec<(nalgebra::Point3<f32>, [u8; 4])>,
-    Vec<(Vec<nalgebra::Point3<f32>>, Vec<usize>)>,
+    Vec<(Point3<f32>, [u8; 4])>,
+    Vec<(Vec<Point3<f32>>, Vec<usize>)>,
 )
 where
     S: AsRef<[u8]>,
@@ -231,15 +243,17 @@ where
 /// Load a glb or gltf file and return a point cloud and a list of trimeshes.
 ///
 /// ```
-/// let mut file = File::open("path_to_file.glb").expect("Failed to open GLB file");
+/// use std::fs::File;
+/// use std::io::Read;
+/// use wgsparkl3d::load_mesh3d::load_gltf::load_model_trimeshes;
+///
+/// let mut file = File::open("../../examples3d/assets/banana.glb").expect("Failed to open GLB file");
 /// let mut buffer = Vec::new();
 /// file.read_to_end(&mut buffer).expect("Failed to read file");
 ///
-/// let (gltf, buffers, _) = gltf::import_slice(slice).expect("Failed to parse GLB");
-///
 /// let _ = load_model_trimeshes(&buffer);
 /// ```
-pub fn load_model_trimeshes<S>(slice: S) -> Vec<(Vec<nalgebra::Point3<f32>>, Vec<usize>)>
+pub fn load_model_trimeshes<S>(slice: S) -> Vec<(Vec<Point3<f32>>, Vec<usize>)>
 where
     S: AsRef<[u8]>,
 {
