@@ -1,5 +1,3 @@
-use std::ptr::dangling;
-
 use wgsparkl_testbed3d::{wgsparkl, Callbacks, RapierData};
 
 use bevy::render::renderer::RenderDevice;

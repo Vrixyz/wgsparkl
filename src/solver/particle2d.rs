@@ -227,12 +227,9 @@ impl GpuParticles {
     }
 
     // TODO: push multiple particles at once.
+    // TODO: merge with particle3d.rs
     /// This is designed to work in conjunction with [`crate::models::GpuModels::push`]
     pub fn push(&mut self, queue: &wgpu::Queue, particle: &Particle) {
-        if self.maximum_size == self.current_size_cached {
-            eprintln!("Particle buffer is full.");
-            return;
-        }
         println!(
             "ParticleDynamics min_size: {} bytes",
             ParticleDynamics::min_size().get()
@@ -244,14 +241,12 @@ impl GpuParticles {
         // Push position
         let offset = self.current_size_cached as u64 * Vector2::<f32>::min_size().get();
         let position = particle.position;
-        // Turn value into &[u8] (raw bytes)
         let bytes = bytemuck::bytes_of(&position);
         queue.write_buffer(&self.positions.buffer(), offset, bytes);
 
         // Push dynamics.
         let offset = self.current_size_cached as u64 * ParticleDynamics::min_size().get();
         let dynamics = particle.dynamics;
-        // Turn value into &[u8] (raw bytes)
         let mut buffer = encase::StorageBuffer::new(Vec::<u8>::new());
         buffer.write(&dynamics).unwrap();
         let bytes = buffer.as_ref();

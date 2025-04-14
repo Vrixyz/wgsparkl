@@ -173,6 +173,17 @@ impl MpmData {
     pub fn coupling(&self) -> &[BodyCouplingEntry] {
         &self.coupling
     }
+
+    pub fn push_particle(&mut self, queue: &wgpu::Queue, particle: &Particle) -> Result<usize, ()> {
+        if self.particles.maximum_size == self.particles.current_size_cached {
+            eprintln!("Particle buffers are full.");
+            return Err(());
+        }
+        self.models
+            .push(queue, particle, self.particles.current_size_cached);
+        self.particles.push(queue, particle);
+        return Ok(1);
+    }
 }
 
 impl MpmPipeline {

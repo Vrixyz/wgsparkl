@@ -284,3 +284,26 @@ pub fn setup_graphics(
 pub fn setup_app_state(mut callbacks: ResMut<Callbacks>) {
     callbacks.0.clear();
 }
+
+pub fn update_graphics(
+    mut commands: Commands,
+    physics_context: Res<PhysicsContext>,
+    app_state: Res<AppState>,
+    device: Res<RenderDevice>,
+    physics: Res<PhysicsContext>,
+    mut rigid_render: ResMut<RenderContext>,
+    mut meshes: ResMut<Assets<Mesh>>,
+    mut materials: ResMut<Assets<BevyMaterial>>,
+    to_clear: Query<Entity, With<InstanceMaterialData>>,
+) {
+    if physics_context.reset_graphics {
+        setup_particles_graphics(
+            &mut commands,
+            &device,
+            &app_state,
+            &physics,
+            &mut meshes,
+            &to_clear,
+        );
+    }
+}

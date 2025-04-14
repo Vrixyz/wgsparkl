@@ -113,5 +113,6 @@ pub fn elastic_cut_demo(
         data,
         rapier_data,
         particles,
+        reset_graphics: false,
     }
 }

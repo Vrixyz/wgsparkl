@@ -18,22 +18,20 @@
 #import wgparry::cuboid as Cuboid;
 
 @group(1) @binding(0)
-var<uniform, read> num_particles: u32;
+var<uniform> num_particles: u32;
 @group(1) @binding(1)
-var<storage, read> particles_pos: array<Particle::Position>;
-@group(1) @binding(2)
 var<storage, read_write> particles_pos: array<Particle::Position>;
-@group(1) @binding(3)
+@group(1) @binding(2)
 var<storage, read_write> particles_dyn: array<Particle::Dynamics>;
-@group(1) @binding(4)
+@group(1) @binding(3)
 var<storage, read> constitutive_model: array<ConstitutiveModel::ElasticCoefficients>;
-@group(1) @binding(5)
+@group(1) @binding(4)
 var<storage, read> plasticity: array<DruckerPrager::Plasticity>;
-@group(1) @binding(6)
+@group(1) @binding(5)
 var<storage, read_write> plastic_state: array<DruckerPrager::PlasticState>;
-@group(1) @binding(7)
+@group(1) @binding(6)
 var<storage, read_write> phases: array<Phase>;
-@group(1) @binding(8)
+@group(1) @binding(7)
 var<uniform> params: Params::SimulationParams;
 
 @group(2) @binding(0)
@@ -52,7 +50,7 @@ fn main(
 ) {
     let particle_id = gid.x;
 
-    if particle_id >= arrayLength(&particles_pos) {
+    if particle_id >= num_particles {
         return;
     }
 

@@ -8,13 +8,13 @@
 #import wgrapier::body as Body;
 
 
-@group(1) @binding(1)
+@group(1) @binding(0)
 var<storage, read> particles_pos: array<Particle::Position>;
-@group(1) @binding(2)
+@group(1) @binding(1)
 var<storage, read> particles_dyn: array<Particle::Dynamics>;
-@group(1) @binding(3)
+@group(1) @binding(2)
 var<storage, read> nodes_linked_lists: array<Grid::NodeLinkedList>;
-@group(1) @binding(4)
+@group(1) @binding(3)
 var<storage, read> particle_node_linked_lists: array<u32>;
 
 @group(2) @binding(0)

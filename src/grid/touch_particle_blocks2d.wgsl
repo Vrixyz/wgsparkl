@@ -231,14 +231,16 @@ struct Position {
 }
 
 @group(1) @binding(0)
+var<uniform> num_particles: u32;
+@group(1) @binding(1)
 var<storage, read_write> particles_pos: array<Position>;
-@group(1) @binding(6)
+@group(1) @binding(7)
 var<storage, read_write> rigid_particle_needs_block: array<u32>;
 
 @compute @workgroup_size(GRID_WORKGROUP_SIZE, 1, 1)
 fn touch_particle_blocks(@builtin(global_invocation_id) invocation_id: vec3<u32>) {
     let id = invocation_id.x;
-    if id < arrayLength(&particles_pos) {
+    if id < num_particles {
         let particle = particles_pos[id];
         var blocks = blocks_associated_to_point(particle.pt);
         for (var i = 0u; i < NUM_ASSOC_BLOCKS; i += 1u) {
@@ -250,7 +252,7 @@ fn touch_particle_blocks(@builtin(global_invocation_id) invocation_id: vec3<u32>
 @compute @workgroup_size(GRID_WORKGROUP_SIZE, 1, 1)
 fn touch_rigid_particle_blocks(@builtin(global_invocation_id) invocation_id: vec3<u32>) {
     let id = invocation_id.x;
-    if id < arrayLength(&particles_pos) {
+    if id < num_particles {
         let entry_id = id / 32u;
         let entry_bit = 1u << (id % 32u);
         let needs_block = (rigid_particle_needs_block[entry_id] & entry_bit) != 0;

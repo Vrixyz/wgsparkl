@@ -45,8 +45,8 @@ impl WgSort {
             .bind_at(
                 1,
                 [
-                    (particles.sample_points.buffer(), 4),
-                    (particles.node_linked_lists.buffer(), 5),
+                    (particles.sample_points.buffer(), 5),
+                    (particles.node_linked_lists.buffer(), 6),
                 ],
             )
             .queue(n_groups);

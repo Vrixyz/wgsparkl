@@ -95,5 +95,6 @@ pub fn elastic_demo(
         data,
         rapier_data,
         particles,
+        reset_graphics: false,
     }
 }

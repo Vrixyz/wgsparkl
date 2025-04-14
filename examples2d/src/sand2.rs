@@ -173,5 +173,6 @@ pub fn sand_demo(
         data,
         rapier_data,
         particles,
+        reset_graphics: false,
     }
 }

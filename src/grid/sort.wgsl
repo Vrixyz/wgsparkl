@@ -5,7 +5,7 @@
 
 
 @group(1) @binding(0)
-var<uniform, read> num_particles u32;
+var<uniform> num_particles: u32;
 @group(1) @binding(1)
 var<storage, read_write> particles_pos: array<Particle::Position>;
 @group(1) @binding(2)
@@ -28,7 +28,7 @@ var<storage, read_write> rigid_particle_needs_block: array<atomic<u32>>;
 @compute @workgroup_size(Grid::GRID_WORKGROUP_SIZE, 1, 1)
 fn touch_particle_blocks(@builtin(global_invocation_id) invocation_id: vec3<u32>) {
     let id = invocation_id.x;
-    if id < arrayLength(&particles_pos) {
+    if id < num_particles {
         let particle = particles_pos[id];
         var blocks = Grid::blocks_associated_to_point(particle.pt);
         for (var i = 0u; i < Grid::NUM_ASSOC_BLOCKS; i += 1u) {
@@ -91,7 +91,7 @@ fn mark_rigid_particles_needing_block(@builtin(global_invocation_id) invocation_
 @compute @workgroup_size(Grid::GRID_WORKGROUP_SIZE, 1, 1)
 fn update_block_particle_count(@builtin(global_invocation_id) invocation_id: vec3<u32>) {
     let id = invocation_id.x;
-    if id < arrayLength(&particles_pos) {
+    if id < num_particles {
         let particle = particles_pos[id];
         let block_id = Grid::block_associated_to_point(particle.pt);
         let active_block_id = Grid::find_block_header_id(block_id);
@@ -119,7 +119,7 @@ fn copy_scan_values_to_first_particles(@builtin(global_invocation_id) invocation
 @compute @workgroup_size(Grid::GRID_WORKGROUP_SIZE, 1, 1)
 fn finalize_particles_sort(@builtin(global_invocation_id) invocation_id: vec3<u32>) {
     let id = invocation_id.x;
-    if id < arrayLength(&particles_pos) {
+    if id < num_particles {
         let particle = particles_pos[id];
         let block_id = Grid::block_associated_to_point(particle.pt);
 

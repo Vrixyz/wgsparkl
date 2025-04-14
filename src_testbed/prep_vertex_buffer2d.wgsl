@@ -7,8 +7,10 @@
 
 @group(0) @binding(0)
 var<storage, read_write> instances: array<InstanceData>;
+/// Stores the number of particles in use, because we cannot rely on `arrayLength(particles_pos)`,
+/// as the array may be bigger to allow more efficient dynamic addition or removal of particles.
 @group(0) @binding(1)
-var<uniform, read> num_particles: u32;
+var<uniform> num_particles: u32;
 @group(0) @binding(2)
 var<storage, read> particles_pos: array<Particle::Position>;
 @group(0) @binding(3)

@@ -53,6 +53,7 @@ pub fn elastic_color_model_demo(
         device.wgpu_device(),
         params,
         &particles,
+        particles.len(),
         &rapier_data.bodies,
         &rapier_data.colliders,
         1f32 / default_scene::SAMPLE_PER_UNIT,
