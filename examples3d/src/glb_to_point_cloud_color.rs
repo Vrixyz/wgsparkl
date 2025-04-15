@@ -15,7 +15,7 @@ pub fn elastic_color_model_demo(
     device: RenderDevice,
     app_state: &mut AppState,
     _callbacks: &mut Callbacks,
-    _assets: &Dependencies,
+    assets: &Dependencies,
 ) -> PhysicsContext {
     let buffer = &assets.get_data("shiba.glb").unwrap().data;
     let pc_grid = load_model_with_colors(

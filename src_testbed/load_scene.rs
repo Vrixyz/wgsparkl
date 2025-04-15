@@ -1,3 +1,4 @@
+use bevy::asset::LoadState;
 use bevy::ecs::system::SystemId;
 use bevy::prelude::*;
 use bevy::render::renderer::RenderDevice;
@@ -18,12 +19,13 @@ pub fn load_scene_plugin(app: &mut App) {
 #[derive(Resource, Default)]
 pub struct CurrentSceneId(pub usize);
 
-#[derive(Copy, Clone, States, Hash, PartialEq, Eq, Debug, Default)]
+#[derive(Clone, States, Hash, PartialEq, Eq, Debug, Default)]
 pub enum SceneState {
     #[default]
     Waiting,
     Loading,
     Loaded,
+    LoadingError(Vec<(String, String)>),
 }
 
 #[derive(Resource)]
@@ -64,6 +66,24 @@ pub fn check_scene_loaded(
     loading_assets: Res<LoadingAssets>,
     asset_server: Res<AssetServer>,
 ) {
+    let errors = loading_assets
+        .assets
+        .iter()
+        .filter_map(|a| {
+            if let Some(load_state) = asset_server.get_load_state(a.1) {
+                return match load_state {
+                    LoadState::Failed(error) => Some((a.0.clone(), error.to_string())),
+                    _ => None,
+                };
+            }
+            None
+        })
+        .collect::<Vec<_>>();
+    if !errors.is_empty() {
+        next_scene_state.set(SceneState::LoadingError(errors));
+        return;
+    }
+
     if loading_assets
         .assets
         .iter()
@@ -71,6 +91,7 @@ pub fn check_scene_loaded(
     {
         return;
     }
+
     next_scene_state.set(SceneState::Loaded);
 }
 pub fn call_init_state(
