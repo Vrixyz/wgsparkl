@@ -1,4 +1,5 @@
 use wgsparkl2d::rapier::prelude::{ColliderBuilder, RigidBodyBuilder};
+use wgsparkl_testbed2d::load_scene::Dependencies;
 use wgsparkl_testbed2d::{wgsparkl, Callbacks, RapierData};
 
 use bevy::render::renderer::RenderDevice;
@@ -16,6 +17,7 @@ pub fn elastic_demo(
     device: RenderDevice,
     app_state: &mut AppState,
     _callbacks: &mut Callbacks,
+    _assets: &Dependencies,
 ) -> PhysicsContext {
     let device = device.wgpu_device();
     let mut rapier_data = RapierData::default();
